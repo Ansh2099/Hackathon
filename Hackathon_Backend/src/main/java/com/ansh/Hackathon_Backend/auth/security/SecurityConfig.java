@@ -50,13 +50,47 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
     
+    /**
+     * CORS Configuration for enabling cross-origin requests
+     * This configuration allows local frontends to connect to the backend
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Allowed origins - configured for local development
+        // For production, replace with specific frontend domains
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:*",           // Local development (any port)
+            "http://127.0.0.1:*",          // Local development (any port)
+            "https://localhost:*",         // Local HTTPS development
+            "https://127.0.0.1:*"          // Local HTTPS development
+            // TODO: Add your custom frontend domains here for production
+            // Example: "https://your-frontend-domain.com",
+            //          "https://your-app.netlify.app"
+        ));
+        
+        // Allowed HTTP methods
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
+        
+        // Allowed headers - you can be more specific if needed
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization",
+            "Content-Type",
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"
+        ));
+        
+        // Allow credentials (cookies, authorization headers, etc.)
         configuration.setAllowCredentials(true);
+        
+        // Cache preflight response for 1 hour
+        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
