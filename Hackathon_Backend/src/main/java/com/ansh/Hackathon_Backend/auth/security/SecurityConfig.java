@@ -60,11 +60,15 @@ public class SecurityConfig {
         
         // Allowed origins - configured for local development
         // For production, replace with specific frontend domains
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:*",           // Local development (any port)
-            "http://127.0.0.1:*",          // Local development (any port)
-            "https://localhost:*",         // Local HTTPS development
-            "https://127.0.0.1:*"          // Local HTTPS development
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",       // React default port
+            "http://localhost:5173",       // Vite default port (current frontend)
+            "http://localhost:4200",       // Angular default port
+            "http://localhost:8081",       // Alternative port
+            "http://127.0.0.1:3000",       // React default port (127.0.0.1)
+            "http://127.0.0.1:5173",       // Vite default port (127.0.0.1)
+            "http://127.0.0.1:4200",       // Angular default port (127.0.0.1)
+            "http://127.0.0.1:8081"        // Alternative port (127.0.0.1)
             // TODO: Add your custom frontend domains here for production
             // Example: "https://your-frontend-domain.com",
             //          "https://your-app.netlify.app"
