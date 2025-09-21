@@ -1,0 +1,30 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: hackathon_postgres
+    environment:
+      POSTGRES_DB: hackathon_db
+      POSTGRES_USER: hackathon_user
+      POSTGRES_PASSWORD: hackathon_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hackathon_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hackathon_user -d hackathon_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+# Top-level network definition
+# This tells Docker Compose to create a bridge network named 'hackathon_network'
+# that the services above can connect to.
+networks:
+  hackathon_network:
+    driver: bridge

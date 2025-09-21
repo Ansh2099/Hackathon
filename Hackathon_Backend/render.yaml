@@ -1,0 +1,38 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: hackathon-postgres
+    env: docker
+    plan: free
+    region: singapore
+    databaseName: hackathon_db
+    databaseUser: hackathon_user
+
+  # Spring Boot Web Service
+  - type: web
+    name: hackathon-backend
+    env: docker
+    plan: free
+    region: singapore
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/*.jar
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hackathon-postgres
+          property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: hackathon-postgres
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: hackathon-postgres
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 3600000
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
