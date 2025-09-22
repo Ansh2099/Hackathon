@@ -1,42 +1,39 @@
-# Multi-stage build for optimized production image
-FROM maven:3.9.4-eclipse-temurin-21 AS build
+# Use a lightweight Java 21 JDK image for building
+FROM eclipse-temurin:21-jdk-jammy AS build
 
-# Set working directory
+# Set work directory
 WORKDIR /app
 
-# Copy pom.xml and download dependencies (for better caching)
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Copy Maven project files
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
 
-# Copy source code and build the application
+# Ensure Maven wrapper is executable
+RUN chmod +x mvnw && ./mvnw dependency:go-offline
+
+# Copy source code
 COPY src ./src
-RUN mvn clean package -DskipTests
 
-# Runtime stage with minimal JRE
-FROM eclipse-temurin:21-jre-alpine
+# Build the Spring Boot application
+RUN ./mvnw package -DskipTests
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup
+# Rename built JAR explicitly before copying
+RUN mv target/*.jar target/app.jar
 
-# Set working directory
+# Use a smaller JRE image for production
+FROM eclipse-temurin:21-jre-jammy AS runtime
+
+# Set work directory
 WORKDIR /app
 
-# Copy the built JAR from build stage
-COPY --from=build /app/target/*.jar app.jar
-
-# Change ownership to non-root user
-RUN chown appuser:appgroup app.jar
-
-# Switch to non-root user
-USER appuser
+# Copy the built JAR
+COPY --from=build /app/target/app.jar app.jar
 
 # Expose port
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+# Set memory limits for low RAM environments
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=65"
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
